@@ -1,0 +1,70 @@
+﻿@page "/products"
+@inject IViewProductsUseCase ViewProductsUseCase
+@inject IGetCategoryByIdUseCase GetCategoryByIdUseCase
+@inject IDeleteProductUseCase DeleteProductUseCase
+@inject NavigationManager NavigationManager
+
+<h3>Products</h3>
+<br/>
+@if (products != null)
+{
+	<div class="table-responsive">
+		<table class="table table-hover">
+			<thead>
+				<tr>
+					<th scope="col">#</th>
+					<th scope="col">Product Category</th>
+					<th scope="col">Product Name</th>
+					<th scope="col">Product Price</th>
+					<th scope="col">Product Quantity</th>
+					<th scope="col">Edit</th>
+					<th scope="col">Delete</th>
+				</tr>
+			</thead>
+			<tbody class="table-group-divider">
+				@foreach (var product in products)
+				{
+					<tr>
+						<th scope="row">@product.ProductId</th>
+						<td>@GetCategoryByIdUseCase.Execute(product.CategoryId.Value).Name</td>
+						<td>@product.Name</td>
+						<td>@(Math.Round(product.Price.Value, 2))</td>
+						<td>@product.Quantity</td>
+						<td><button @onclick="@(() => OnEditProduct(@product))" type="button" class="btn btn-outline-secondary">Edit</button></td>
+						<td><button @onclick="@(() => DeleteProduct(@product.ProductId))" type="button" class="btn btn-outline-danger">Delete</button></td>
+					</tr>
+				}
+			</tbody>
+		</table>
+	</div>
+}
+
+<button @onclick="OnClickAddProduct" class="btn btn-primary" type="button">Add Product</button>
+
+
+@code {
+
+	private IEnumerable<Product> products;
+
+	protected override void OnInitialized()
+	{
+		base.OnInitialized();
+
+		products = ViewProductsUseCase.Execute();
+	}
+
+	private void OnClickAddProduct()
+	{
+		NavigationManager.NavigateTo("/add-product");
+	}
+
+	private void OnEditProduct(Product product)
+	{
+		NavigationManager.NavigateTo($"/edit-product/{product.ProductId}");
+	}
+
+	private void DeleteProduct(int productId)
+	{
+		DeleteProductUseCase.DeleteProduct(productId);
+	}
+}

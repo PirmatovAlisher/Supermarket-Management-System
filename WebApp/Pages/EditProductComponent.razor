@@ -1,0 +1,81 @@
+﻿@page "/edit-product/{productId}"
+@inject NavigationManager NavigationManager
+@inject IGetProductByIdUseCase GetProductByIdUseCase
+@inject IEditProductUseCase EditProductUseCase
+@inject IViewCategoriesUseCase ViewCategoriesUseCase
+
+<h3>Edit Product</h3>
+
+@if (product is not null)
+{
+	<EditForm Model="product" OnInvalidSubmit="OnValidSubmit">
+		<DataAnnotationsValidator />
+		<ValidationSummary />
+		<div class="form-floating mb-3">
+			<InputText @bind-Value="product.Name" type="text" class="form-control" id="name" placeholder="Product Name" />
+			<label for="floatingInput">Product Name</label>
+		</div>
+		<label for="floatingInput">Category</label>
+		<select class="form-select" aria-label="Category Selection">
+			<option selected></option>
+			@foreach (var category in categories)
+			{
+				<option value="@category.CategoryId">@category.Name</option>
+			}
+		</select>
+		<br />
+		<div class="form-floating mb-3">
+			<InputNumber @bind-Value="product.Price" @bind-Value:format="F2" type="text" class="form-control" id="price" placeholder="Product Price" />
+			<label for="floatingInput">Product Price</label>
+		</div>
+		<div class="form-floating mb-3">
+			<InputNumber @bind-Value="product.Quantity" type="text" class="form-control" id="quantity" placeholder="Product Quantity" />
+			<label for="floatingInput">Product Quantity</label>
+		</div>
+
+		<br />
+		<button class="btn btn-outline-primary" type="submit">Save</button>
+		<button class="btn btn-outline-danger" type="button" @onclick="OnCancel">Cancel</button>
+	</EditForm>
+}
+
+
+@code {
+	[Parameter]
+	public string ProductId { get; set; }
+
+	private Product product;
+
+	private List<Category> categories;
+
+	protected override void OnInitialized()
+	{
+		base.OnInitialized();
+		categories = ViewCategoriesUseCase.Execute().ToList();
+	}
+
+	protected override void OnParametersSet()
+	{
+		base.OnParametersSet();
+		if (int.TryParse(this.ProductId, out int iProductId))
+		{
+			var prod = GetProductByIdUseCase.GetProductById(iProductId);
+			this.product = new Product() { 
+											CategoryId = prod.CategoryId,
+											ProductId = prod.ProductId,
+											Name = prod.Name,
+											Quantity = prod.Quantity,
+											Price = prod.Price
+			};
+		}
+	}
+
+	private void OnValidSubmit()
+	{
+		EditProductUseCase.EditProduct(this.product);
+		NavigationManager.NavigateTo("/products");
+	}
+
+	private void OnCancel() => NavigationManager.NavigateTo("/products");
+
+}

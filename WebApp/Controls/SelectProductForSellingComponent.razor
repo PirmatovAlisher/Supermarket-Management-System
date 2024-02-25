@@ -1,0 +1,84 @@
+﻿@page "/products-by-categoryId"
+
+@inject IViewCategoriesUseCase ViewCategoriesUseCase
+@inject IViewProductsByCategoryId ViewProductsByCategoryId
+
+
+<label for="floatingInput">Category</label>
+<select class="form-select" @bind="SelectedCategoryId" aria-label="Category Selection">
+	<option selected></option>
+	@foreach (var category in categories)
+	{
+		<option value="@category.CategoryId">@category.Name</option>
+	}
+</select>
+<br/>
+
+@if(productsInCategory is not null)
+{
+	<div class="table-responsive">
+		<table class="table table-hover">
+			<thead>
+				<tr>
+					<th scope="col">#</th>
+					<th scope="col">Product Name</th>
+					<th scope="col">Quantity Left</th>
+				</tr>
+			</thead>
+			<tbody class="table-group-divider">
+				@foreach (var product in productsInCategory)
+				{
+					<tr @onclick="@(() => OnSelectProduct(product))" style="@(product.ProductId == selectedProductId? "background-color:beige; cursor:pointer;" : "cursor:pointer;")">
+						<th scope="row">@product.ProductId</th>
+						<td>@product.Name</td>
+						<td>@product.Quantity</td>
+					</tr>
+				}
+			</tbody>
+		</table>
+	</div>
+}
+
+@code {
+
+
+	private List<Category> categories;
+	private IEnumerable<Product> productsInCategory;
+
+	private int selectedProductId;
+
+	[Parameter]
+	public EventCallback<Product> OnProductSelected { get; set; }
+
+	private int selectedCategoryId;
+	private int SelectedCategoryId
+	{
+		get
+		{
+			return selectedCategoryId;
+		}
+		set
+		{
+			selectedCategoryId = value;
+			productsInCategory = ViewProductsByCategoryId.GetProducts(value);
+			OnSelectProduct(null);
+			StateHasChanged();
+		}
+	}
+
+	protected override void OnInitialized()
+	{
+		base.OnInitialized();
+		categories = ViewCategoriesUseCase.Execute().ToList();
+	}
+
+	private void OnSelectProduct(Product product)
+	{
+		OnProductSelected.InvokeAsync(product);
+		if(product != null) 
+		{
+			selectedProductId = product.ProductId;
+		}
+	}
+
+}

@@ -1,0 +1,70 @@
+﻿@page "/add-product"
+
+@inject IAddProductUseCase AddProductUseCase
+@inject IViewCategoriesUseCase ViewCategoriesUseCase
+@inject NavigationManager NavigationManager
+
+<h3>Add Product</h3>
+
+<br/>
+
+@if(product !=null)
+{
+	<EditForm Model="product" OnInvalidSubmit="OnValidSubmit">
+		<DataAnnotationsValidator/>
+		<ValidationSummary/>
+		<div class="form-floating mb-3">
+			<InputText @bind-Value="product.Name" type="text" class="form-control" id="name" placeholder="Product Name" />
+			<label for="floatingInput">Product Name</label>
+		</div>
+		<label for="floatingInput">Category</label>
+		<select  class="form-select" aria-label="Category Selection">
+			<option selected></option>
+			@foreach (var category in categories)
+			{
+				<option value="@category.CategoryId">@category.Name</option>
+			}
+		</select>
+		<br/>
+		<div class="form-floating mb-3">
+			<InputNumber @bind-Value="product.Price" @bind-Value:format="F2" class="form-control" id="price" placeholder="Product Price" />
+			<label for="floatingInput">Product Price</label>
+		</div>
+		<div class="form-floating mb-3">
+			<InputNumber @bind-Value="product.Quantity" class="form-control" id="quantity" placeholder="Product Quantity" />
+			<label for="floatingInput">Product Quantity</label>
+		</div>
+
+		<br />
+		<button class="btn btn-outline-primary" type="submit">Save</button>
+		<button class="btn btn-outline-danger" type="button" @onclick="OnCancel">Cancel</button>
+	</EditForm>
+}
+
+
+
+@code {
+
+	private Product product { get; set; }
+	private List<Category> categories;
+
+	protected override void OnInitialized()
+	{
+		base.OnInitialized();
+
+		product = new Product();
+
+		categories = ViewCategoriesUseCase.Execute().ToList();
+	}
+
+	private void OnValidSubmit()
+	{
+		AddProductUseCase.AddProduct(product);
+		NavigationManager.NavigateTo("/products");
+	}
+
+	private void OnCancel()
+	{
+		NavigationManager.NavigateTo("/products");
+	}
+}
